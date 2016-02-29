@@ -70,7 +70,8 @@ img {
 
 <div id="online-versions" class="section level1">
 <h1>Online Versions</h1>
-<p><a href>Source Code</a> <a href>HTML Version</a></p>
+<p><a href="https://github.com/NLDK/ExerciseQualityPrediction/blob/master/PredictingExerciseQuality.Rmd">Source Code</a></p>
+<p><a href="http://htmlpreview.github.io/?https://github.com/NLDK/ExerciseQualityPrediction/blob/master/PredictingExerciseQuality.html">HTML Version</a></p>
 </div>
 <div id="getting-and-cleaning-data" class="section level1">
 <h1>Getting and Cleaning Data</h1>
@@ -131,10 +132,19 @@ randomForestFit &lt;- train(classe ~ ., data= training, method='rf', trControl=f
 <div id="out-of-sample-error" class="section level1">
 <h1>Out of Sample Error</h1>
 <p>The Out of Sample Error (<code>ose</code>) can be given as <code>1 - accuracy * 100</code>, and we calculate it here as such.</p>
-<pre class="r"><code>randomForestPredict &lt;- predict(randomForestFit, validation)
-ose &lt;- (1 - (sum(randomForestPredict == validation$classe) / length(randomForestPredict))) * 100
+<pre class="r"><code>randomForestPredict &lt;- predict(randomForestFit, validation)</code></pre>
+<pre><code>## Loading required package: randomForest
+## randomForest 4.6-12
+## Type rfNews() to see new features/changes/bug fixes.
+## 
+## Attaching package: 'randomForest'
+## 
+## The following object is masked from 'package:ggplot2':
+## 
+##     margin</code></pre>
+<pre class="r"><code>ose &lt;- (1 - (sum(randomForestPredict == validation$classe) / length(randomForestPredict))) * 100
 ose</code></pre>
-<pre><code>## [1] 0.2718777</code></pre>
+<pre><code>## [1] 0.03398471</code></pre>
 </div>
 <div id="visualizing" class="section level1">
 <h1>Visualizing</h1>

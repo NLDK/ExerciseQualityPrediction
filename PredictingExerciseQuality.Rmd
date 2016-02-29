@@ -2,13 +2,13 @@
 title: "Predicting Exercise Quality"
 author: "Dan Kirlin"
 date: "February 28, 2016"
-output: html_document
+output: pdf_document
 ---
 
 #Online Versions
-[Source Code]()
+[Source Code](https://github.com/NLDK/ExerciseQualityPrediction/blob/master/PredictingExerciseQuality.Rmd)
 
-[HTML Version]()
+[HTML Version](http://htmlpreview.github.io/?https://github.com/NLDK/ExerciseQualityPrediction/blob/master/PredictingExerciseQuality.html)
 
 #Getting and Cleaning Data
 We will start by loading the necessary libraries, as well as downloading our test and training data on disk and then into memory.
