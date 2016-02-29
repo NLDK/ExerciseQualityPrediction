@@ -1,0 +1,86 @@
+---
+title: "Predicting Exercise Quality"
+author: "Dan Kirlin"
+date: "February 28, 2016"
+output: html_document
+---
+
+#Online Versions
+[Source Code]()
+
+[HTML Version]()
+
+#Getting and Cleaning Data
+We will start by loading the necessary libraries, as well as downloading our test and training data on disk and then into memory.
+```{r}
+library(caret); library(e1071); library(parallel);library(doParallel);
+download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv",destfile="training.csv",method="libcurl")
+download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv",destfile="testing.csv",method="libcurl")
+
+rawTrain <- read.csv('training.csv')
+test <- read.csv('testing.csv')
+```
+
+Before training the model, we must remove columns that will provide little positivie predictive value (for predicting test set values). As such, if a column has more than 2 NA's in the **test** data set, we will remove it.
+```{r}
+keepIndices <- colSums(is.na(test)) < 2
+rawTrain <- rawTrain[, keepIndices]
+test <- test[, keepIndices]
+```
+
+Leveraing the knowledge from the documentation, we have even more insight into other variables of poor predictive value.
+
+* `timestamp`: Time is irrelevant, this is fairly close to a unique identifier.
+* `X`: Antoher uniqueidentifier, no predictive value.
+* `user_name`: Training the model on which user was performing the exercise seems like a terrible way to overfit the data.
+* `new_window`: Specifies if calculated values are present.
+```{r}
+poorPredictorIndices = grep("timestamp|X|user_name|new_window", names(rawTrain))
+rawTrain <- rawTrain[, -poorPredictorIndices]
+test <- test[,-poorPredictorIndices]
+```
+
+We need to build out our validation set, which will be used to calculate the out of sample error for our model towards the end of this exercise.
+```{r}
+trainingIdx <- createDataPartition(y = rawTrain$classe, p = 0.7, list = FALSE)
+training <- rawTrain[trainingIdx, ]
+validation <- rawTrain[-trainingIdx,]
+```
+
+#Model
+For this assignment I decided to use `random forest` because although introducing **huge** computational complexity (not kidding, this thing ran for 3+ hours when the data was not cleaned up *even when multithread*) it however has highly accurate results.
+
+##Cross Validation
+For this model we will be using a 3-fold cross validation. (We are keeping the number low to keep the performance cost of training the model as low as possible.)
+```{r}
+fitControl <- trainControl(method = "cv", number = 3)
+```
+##Model Building
+We will be doing a fairly standard random forest using the `caret` package, only difference is we will be using our custom cross-validation train control.
+```{r, cache=TRUE}
+set.seed(7354)
+randomForestFit <- train(classe ~ ., data= training, method='rf', trControl=fitControl, importance = TRUE)
+```
+
+# Out of Sample Error
+The Out of Sample Error (`ose`) can be given as `1 - accuracy * 100`, and we calculate it here as such.
+```{r}
+randomForestPredict <- predict(randomForestFit, validation)
+ose <- (1 - (sum(randomForestPredict == validation$classe) / length(randomForestPredict))) * 100
+ose
+```
+
+#Visualizing
+I found 3 Popular modes of visualizing random forest as pointed out on this [StackOverflow Post](http://stats.stackexchange.com/questions/2344/best-way-to-present-a-random-forest-in-a-publication), I have gone with 2 as the thrid was incompatible with the `caret` package's `train` function (unfortunately `varImpPlot` was incompatible as well, so we'll have to settle for a data table).
+
+##Imporance Plot
+It appears `num_window` and `roll_belt` have incredibly high positive predictive value as compared to the other variables:
+```{r}
+varImp(randomForestFit)
+```
+
+##Overfitting with High Dimensional Data
+In the following graph we can see at ~28 predictors, the random forest reaches a peak where it begins to **overfit** the data.
+```{r}
+plot(randomForestFit, log="y")
+```
